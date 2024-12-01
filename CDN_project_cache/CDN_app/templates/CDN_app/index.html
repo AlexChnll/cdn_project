@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CDN Image Fetcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+        select {
+            padding: 8px;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        img {
+            max-width: 500px;
+            max-height: 500px;
+            margin-top: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        .error {
+            color: red;
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CDN Image Fetcher</h1>
+        <select id="imageSelect" onchange="updateImage()">
+            <option value="">Select an image</option>
+            <option value="dog">Dog</option>
+            <option value="cat">Cat</option>
+            <option value="mouse">Mouse</option>
+        </select>
+        <div>
+            <img id="displayedImage" src="" alt="Selected image will appear here" style="display: none;">
+        </div>
+        <div id="errorMessage" class="error">Error loading image</div>
+    </div>
+
+    <script>
+        function updateImage() {
+            const select = document.getElementById('imageSelect');
+            const img = document.getElementById('displayedImage');
+            const errorMsg = document.getElementById('errorMessage');
+            
+            if (select.value) {
+                fetch(`/get_image/${select.value}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const imageUrl = URL.createObjectURL(blob);
+                        img.src = imageUrl;
+                        img.style.display = 'block';
+                        errorMsg.style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        errorMsg.style.display = 'block';
+                        img.style.display = 'none';
+                    });
+            } else {
+                img.style.display = 'none';
+                errorMsg.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
