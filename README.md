@@ -1,6 +1,7 @@
 5TC project : implementation of a CDN architecture with a LRU cache strategy.
 
 Before starting the servers, you have to run in a virtual environnement : use the command "venv\Scripts\activate".
+
 The central server has to be run on port 8080: "py manage.py runserver 8080".
 
 Reminder of the different phases to be implemented :
