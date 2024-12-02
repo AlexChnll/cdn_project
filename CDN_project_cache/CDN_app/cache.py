@@ -3,34 +3,28 @@ from collections import OrderedDict
 
 class LRUCache:
     def __init__(self, capacity):
-        # Initialise the LRUCache with a maximum capacity
-        # param capacity : maximum capacity of the LRUCache
+        # Initialisation du cache avec une capacité maximale
         self.cache = OrderedDict()
         self.capacity = capacity
 
     def get(self, key):
-        # Get the image if it exist
-        # param key: image's key
-        # return; image content or None
+        # Récupérer l'image si elle existe
         if key in self.cache:
-            # Move the key at the top of the list to show it was recently used.
+            # Déplace la clé au début de la liste pour montrer qu'elle a été récemment utilisée
             self.cache.move_to_end(key, last=False)
             return self.cache[key]
         return None
 
     def put(self, key, value):
-        # Add a new image in the cache
-        # If cache is full, remove the least recently used image
-        # param key: image's key
-        # param value: image content
+        # Ajoute une nouvelle image au cache
+        # Si le cache est plein, l'image utilisée la moins récemment est supprimée
 
         if key in self.cache:
             self.cache.move_to_end(key, last=False)
         else: 
             if len(self.cache) >= self.capacity:
-                # Delete the least recently used image (first entry in OrderedDict).
                 removed_key, removed_value = self.cache.popitem(last=True)
-            # Add new key
+            # Ajoute la nouvelle clé
             self.cache[key] = value
             self.cache.move_to_end(key, last=False)
 

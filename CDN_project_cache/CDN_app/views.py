@@ -5,7 +5,7 @@ import requests
 from django.conf import settings
 from .cache import LRUCache
 
-# Initialize LRU cache
+# Initialisation du cache
 cache = LRUCache(capacity=2)
 
 # Adresse privée utilisée pour interagir avec le serveur central
@@ -19,7 +19,7 @@ def get_image(request, image_name):
    
     print(f"Received request for image: {image_name}")
 
-    # Vérifiez si l'image est dans le cache
+    # Vérifier si l'image est dans le cache
     cached_path = cache.get(image_name)
     if cached_path and os.path.exists(cached_path):
         print(f"Cache hit for {image_name} and exist")
@@ -57,7 +57,7 @@ def get_image(request, image_name):
             print(f"Error fetching from central server: {e}")
             return HttpResponseServerError('Error communicating with central server')
 
-# Si rien ne fonctionne, retournez l'image par défaut
+    # Si rien ne fonctionne, retournez une image par défaut
     default_path = os.path.join(settings.BASE_DIR, 'static', 'images/default.jpg')
     if os.path.exists(default_path):
         try:
