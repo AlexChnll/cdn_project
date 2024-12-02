@@ -8,6 +8,10 @@ from .cache import LRUCache
 # Initialize LRU cache
 cache = LRUCache(capacity=2)
 
+# Adresse privée utilisée pour interagir avec le serveur central
+CENTRAL_SERVER_PRIVATE_IP = "10.0.0.11"
+CENTRAL_SERVER_PORT = 8080
+
 def index(request):
     return render(request, 'CDN_app/index.html')
 
@@ -30,15 +34,19 @@ def get_image(request, image_name):
     
     else:
         print(f"Cache miss for {image_name}, fetching from central server...")
-        central_server_url = "http://127.0.0.1:8080/get_image/"
+        
+        # Si le fichier n'est pas en cache, contacter le serveur central
+        central_server_url = f"http://{CENTRAL_SERVER_PRIVATE_IP}:{CENTRAL_SERVER_PORT}/get_image/{image_name}"
+        
         try:
-            response = requests.get(f"{central_server_url}{image_name}", stream=True)
+            response = requests.get(central_server_url, stream=True)
             if response.status_code == 200:
-                # Enregistrer l'image localement et mettez-la en cache
                 local_path = os.path.join(settings.BASE_DIR, 'static', 'images', f"{image_name}.jpg")
                 with open(local_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
+                
+                # Mettre l'image en cache
                 cache.put(image_name, local_path)
                 print(f"Image {image_name} stored in cache at {local_path}")
                 return FileResponse(open(local_path, 'rb'), content_type='image/jpeg')
