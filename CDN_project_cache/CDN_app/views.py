@@ -3,15 +3,14 @@ from django.http import FileResponse, HttpResponseNotFound, HttpResponseServerEr
 import os
 import requests
 import socket
-#from requests.adapters import HTTPAdapter
-#from urllib3.poolmanager import PoolManager
+from requests.adapters import HTTPAdapter
+from urllib3.poolmanager import PoolManager
 from django.conf import settings
 from collections import OrderedDict
 import json
 
 class LRUCache:
     def __init__(self, capacity, cache_file='cache.json'):
-        # Initialisation du cache avec une capacité maximale
         self.cache = OrderedDict()
         self.capacity = capacity
         self.cache_file = cache_file
@@ -26,7 +25,6 @@ class LRUCache:
     def get(self, key):
         # Récupérer l'image si elle existe
         if key in self.cache:
-            # Déplace la clé au début de la liste pour montrer qu'elle a été récemment utilisée
             self.cache.move_to_end(key, last=False)
             return self.cache[key]
         return None
@@ -40,13 +38,11 @@ class LRUCache:
             removed_key, removed_value = self.cache.popitem(last=True)
             if os.path.isfile(removed_value):
                 os.remove(removed_value)
-            # Ajoute la nouvelle clé
         self.cache[key] = value
         self._save_cache()
 
     def delete(self, key):
         if key in self.cache:
-            # Supprimer le fichier associé si présent
             file_path = self.cache.pop(key)
             if os.path.isfile(file_path):
                 os.remove(file_path)
@@ -64,21 +60,21 @@ CENTRAL_SERVER_PRIVATE_IP = "10.0.0.11"
 CENTRAL_SERVER_PORT = 8080
 
 # Interface réseau à utiliser pour les requêtes sortantes vers le serveur central
-#OUTBOUND_INTERFACE_IP = "10.0.0.10"
+OUTBOUND_INTERFACE_IP = "10.0.0.10"     # A modifier pour chaque serveur cache
 
 # HTTPAdapter pour forcer une adresse source
-#class SourceAddressAdapter(HTTPAdapter):
-#    def __init__(self, source_address, **kwargs):
-#        self.source_address = source_address
-#        super().__init__(**kwargs)
+class SourceAddressAdapter(HTTPAdapter):
+    def __init__(self, source_address, **kwargs):
+        self.source_address = source_address
+        super().__init__(**kwargs)
 
-#    def init_poolmanager(self, *args, **kwargs):
-#        kwargs['source_address'] = (self.source_address, 0)
-#        self.poolmanager = PoolManager(*args, **kwargs)
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs['source_address'] = (self.source_address, 0)
+        self.poolmanager = PoolManager(*args, **kwargs)
 
-# Initialisation de la session avec l'adresse source spécifique
-#session = requests.Session()
-#session.mount('http://', SourceAddressAdapter(OUTBOUND_INTERFACE_IP))
+# Initialisation de la session
+session = requests.Session()
+session.mount('http://', SourceAddressAdapter(OUTBOUND_INTERFACE_IP))
 
 def index(request):
     return render(request, 'CDN_app/index.html')
@@ -97,7 +93,7 @@ def get_image(request, image_name):
     
     print(f"Cache miss for {image_name}, fetching from central server...")
         
-        # Si le fichier n'est pas en cache, contacter le serveur central
+    # Si le fichier n'est pas en cache, contacter le serveur central
     central_server_url = f"http://{CENTRAL_SERVER_PRIVATE_IP}:{CENTRAL_SERVER_PORT}/get_image/{image_name}"
         
     try:
@@ -107,7 +103,7 @@ def get_image(request, image_name):
             with open(local_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)                     
-            cache.put(image_name, local_path) # Mettre l'image en cache
+            cache.put(image_name, local_path)
             return FileResponse(open(local_path, 'rb'), content_type='image/jpeg')
         elif response.status_code == 404:
             return HttpResponseNotFound('Image not found on central server')

@@ -117,7 +117,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-ALLOWED_HOSTS = ['10.0.0.11', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 # Add these lines to your settings.py
 STATIC_URL = 'static/'
